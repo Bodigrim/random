@@ -18,7 +18,7 @@ import System.Random
 
 main :: IO ()
 main = do
-  let !sz = 1048576
+  let !sz = 1000000
   defaultMain
     [ bgroup "pure"
       [ bgroup "random"
