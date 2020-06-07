@@ -64,6 +64,8 @@ extra-source-files:
     README.md
     CHANGELOG.md
 
+tested-with: GHC==8.10.1, GHC==8.8.3, GHC==8.6.5, GHC==8.4.4, GHC==8.2.2
+
 source-repository head
     type:     git
     location: https://github.com/haskell/random.git
