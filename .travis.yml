@@ -35,6 +35,7 @@ jobs:
   include:
     - compiler: ghc-8.10.1
       addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.10.1","cabal-install-3.2"]}}
+      env: COVERAGE=--enable-coverage
       os: linux
     - compiler: ghc-8.8.3
       addons: {"apt":{"sources":[{"sourceline":"deb http://ppa.launchpad.net/hvr/ghc/ubuntu xenial main","key_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x063dab2bdc0b3f9fcebc378bff3aeacef6f88286"}],"packages":["ghc-8.8.3","cabal-install-3.2"]}}
@@ -64,6 +65,7 @@ before_install:
   - set -o pipefail
   - TEST=--enable-tests
   - BENCH=--enable-benchmarks
+  - COVERAGE=${COVERAGE---disable-coverage}
   - HEADHACKAGE=false
   - rm -f $CABALHOME/config
   - |
@@ -103,10 +105,10 @@ install:
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "./configure.ac" ]; then (cd "." && autoreconf -i); fi
-  - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH}
+  - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH} ${COVERAGE}
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
-  - travis_wait 40 ${CABAL} v2-build $WITHCOMPILER ${TEST} ${BENCH} --dep -j2 all
+  - travis_wait 40 ${CABAL} v2-build $WITHCOMPILER ${TEST} ${BENCH} ${COVERAGE} --dep -j2 all
   - travis_wait 40 ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks --dep -j2 all
 script:
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
@@ -118,6 +120,7 @@ script:
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec tar -xvf '{}' \;
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec rm       '{}' \;
   - PKGDIR_random="$(find . -maxdepth 1 -type d -regex '.*/random-[0-9.]*')"
+  - if [ "$COVERAGE" = "--enable-coverage" ]; then ${CABAL} v2-install $WITHCOMPILER --ignore-project -j2 hpc-coveralls; fi
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
@@ -134,13 +137,24 @@ script:
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all
   # Building with tests and benchmarks...
   # build & run tests, build benchmarks
-  - ${CABAL} v2-build $WITHCOMPILER ${TEST} ${BENCH} all
+  - ${CABAL} v2-build $WITHCOMPILER ${TEST} ${BENCH} ${COVERAGE} all
   # Testing...
-  - ${CABAL} v2-test $WITHCOMPILER ${TEST} ${BENCH} all
+  - ${CABAL} v2-test $WITHCOMPILER ${TEST} ${BENCH} ${COVERAGE} all
+  # Running hpc-coveralls...
+  - mkdir -p dist/hpc
+  - find dist-newstyle -iname hpc
+  - ls `find dist-newstyle -iname hpc`/vanilla/
+  - cp -r `find dist-newstyle -iname hpc`/vanilla/* dist/hpc
+  # - cp -r dist/hpc/mix/random-*/random-*-inplace dist/hpc/mix/
+  - for i in dist/hpc/mix/random-*; do cp -r $i $i-inplace; done
+  - ls dist/hpc
+  - ls dist/hpc/tix
+  - ls dist/hpc/tix/spec
+  - if [ "$COVERAGE" = "--enable-coverage" ]; then hpc-coveralls spec --exclude-dir=test; fi
   # cabal check...
   - (cd ${PKGDIR_random} && ${CABAL} -vnormal check)
   # haddock...
-  - ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all
+  - ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} ${COVERAGE} all
   # Building without installed constraints for packages in global-db...
   - rm -f cabal.project.local
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all
