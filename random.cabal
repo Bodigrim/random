@@ -143,7 +143,12 @@ test-suite spec
         tasty >=1.0 && <1.4,
         tasty-smallcheck >=0.8 && <0.9,
         tasty-expected-failure >=0.11 && <0.12,
-        tasty-hunit >=0.10 && <0.11
+        tasty-hunit >=0.10 && <0.11,
+        -- Below are dependencies of doctests
+        mwc-random >=0.13 && <0.15,
+        primitive >=0.6 && <0.8,
+        unliftio >=0.2 && <0.3,
+        vector >=0.10 && <0.14
 
 benchmark legacy-bench
     type:             exitcode-stdio-1.0
