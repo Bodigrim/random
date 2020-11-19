@@ -2,6 +2,8 @@ resolver: lts-11.22
 packages:
 - .
 extra-deps:
+- bytestring-0.11.0.0
+
 - splitmix-0.1@sha256:d50c4d0801a35be7875a040470c09863342514930c82a7d25780a6c2efc4fda9,5249
 - doctest-0.16.2@sha256:2f96e9bbe9aee11b47453c82c24b3dc76cdbb8a2a7c984dfd60b4906d08adf68,6942
 - cabal-doctest-1.0.8@sha256:34dff6369d417df2699af4e15f06bc181d495eca9c51efde173deae2053c197c,1491
