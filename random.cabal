@@ -36,7 +36,7 @@ Library
         System.Random
     extensions:	CPP
     GHC-Options: -O2
-    build-depends: base >= 3 && < 5, time
+    build-depends: base >= 3 && < 5, splitmix >= 0.1
 
 source-repository head
     type:     git

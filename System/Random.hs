@@ -88,9 +88,9 @@ import Foreign.Ptr      ( Ptr, nullPtr )
 import Foreign.C	( CTime, CUInt )
 #else
 import System.CPUTime	( getCPUTime )
-import Data.Time	( getCurrentTime, UTCTime(..) )
 import Data.Ratio       ( numerator, denominator )
 #endif
+import System.Random.SplitMix
 import Data.Char	( isSpace, chr, ord )
 import System.IO.Unsafe ( unsafePerformIO )
 import Data.IORef       ( IORef, newIORef, readIORef, writeIORef )
@@ -117,21 +117,6 @@ atomicModifyIORef' ref f = do
             (\x -> let (a, b) = f x
                     in (a, a `seq` b))
     b `seq` return b
-#endif
-
--- The standard nhc98 implementation of Time.ClockTime does not match
--- the extended one expected in this module, so we lash-up a quick
--- replacement here.
-#ifdef __NHC__
-foreign import ccall "time.h time" readtime :: Ptr CTime -> IO CTime
-getTime :: IO (Integer, Integer)
-getTime = do CTime t <- readtime nullPtr;  return (toInteger t, 0)
-#else
-getTime :: IO (Integer, Integer)
-getTime = do
-  utc <- getCurrentTime
-  let daytime = toRational $ utctDayTime utc
-  return $ quotRem (numerator daytime) (denominator daytime)
 #endif
 
 -- | The class 'RandomGen' provides a common interface to random number
@@ -451,8 +436,8 @@ instance Random CDouble where
 mkStdRNG :: Integer -> IO StdGen
 mkStdRNG o = do
     ct          <- getCPUTime
-    (sec, psec) <- getTime
-    return (createStdGen (sec * 12345 + psec + ct + o))
+    (seed, gamma) <- unseedSMGen <$> initSMGen
+    return (createStdGen (toInteger seed * 12345 + toInteger gamma + ct + o))
 
 randomBounded :: (RandomGen g, Random a, Bounded a) => g -> (a, g)
 randomBounded = randomR (minBound, maxBound)
