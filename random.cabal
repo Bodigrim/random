@@ -83,6 +83,7 @@ source-repository head
 
 library
     exposed-modules:
+        Lib
         System.Random
         System.Random.Internal
         System.Random.Stateful
