@@ -1,0 +1,15 @@
+kind: pipeline
+name: arm64
+platform: { os: linux, arch: arm64 }
+steps:
+- name: Test
+  image: buildpack-deps:focal
+  commands:
+    - export LC_ALL=C.UTF-8
+    - apt-get update -y
+    - apt-get install -y ghc cabal-install
+    - cabal new-update
+    - cabal new-test
+    - cabal new-run random:bench:bench -- -t10 -p uniformR.floating.pure
+    - cabal new-run random:bench:bench -- -t10 -p uniformR.floating.State
+    - cabal new-run random:bench:bench -- -t10 -p uniformR.floating.IO
