@@ -896,7 +896,7 @@ measureUntil warnIfNoTimeout timeout (RelStDev targetRelStDev) b = do
     go n t1 sumOfTs = do
       t2 <- measure (2 * n) b
 
-      let Estimate (Measurement meanN allocN copiedN maxMemN) stdevN = predictPerturbed t1 t2
+      let est@(Estimate (Measurement meanN allocN copiedN maxMemN) stdevN) = predictPerturbed t1 t2
           isTimeoutSoon = case timeout of
             NoTimeout -> False
             -- multiplying by 12/10 helps to avoid accidental timeouts
@@ -904,6 +904,8 @@ measureUntil warnIfNoTimeout timeout (RelStDev targetRelStDev) b = do
           isStDevInTargetRange = stdevN < truncate (max 0 targetRelStDev * word64ToDouble meanN)
           scale = (`quot` n)
           sumOfTs' = sumOfTs + measTime t1
+
+      print est
 
       case timeout of
         NoTimeout | warnIfNoTimeout, sumOfTs' + measTime t2 > 100 * 1000000000000
